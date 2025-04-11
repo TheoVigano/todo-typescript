@@ -4,3 +4,7 @@ export interface TodoType {
   completed: boolean;
   userId: number;
 }
+
+export interface FormProps {
+  onAddTodo: (todo: string) => void;
+}

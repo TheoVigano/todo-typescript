@@ -6,17 +6,37 @@ import { api } from "./services/api";
 import { TodoType } from "./types/todo";
 
 export function App() {
-  const [todos, setTodos] = useState<TodoType>([]);
-  
+  const [todos, setTodos] = useState<TodoType[]>([]);
+  const userId = 1;
   useEffect(() => {
-    api.get("/").then((response) => {
+    api.get(`/user/${userId}`).then((response) => {
       setTodos(response.data.todos);
     });
   }, []);
 
+  const handleAddTodo = async (newTodo: string) => {
+    const response = await api.post("/add", {
+      todo: newTodo,
+      completed: false,
+      userId,
+    });
+    setTodos((prevTodos) => [response.data, ...prevTodos]);
+
+    const newTask = {
+      ...response.data.id,
+      id: response.data.id || Math.floor(Math.random() * 1000000),
+    };
+
+    setTodos((prevTodos) => [newTask, ...prevTodos]);
+  };
+  const handleDeleteTodo = async (id: number) => {
+    await api.delete(`${id}`);
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
+
   return (
     <>
-      <Header />
+      <Header onAddTodo={handleAddTodo} />
       <div className="todo-list">
         <div className="header">
           <div className="created-tasks">
@@ -30,8 +50,13 @@ export function App() {
           </div>
         </div>
         <div className="tasks-list">
-          {todos.map(({id, todo}) =>(
-            <Task key={id} description={todo} />
+          {todos.map(({ id, todo }) => (
+            <Task
+              key={id}
+              id={id}
+              description={todo}
+              onDelete={handleDeleteTodo}
+            />
           ))}
         </div>
       </div>
